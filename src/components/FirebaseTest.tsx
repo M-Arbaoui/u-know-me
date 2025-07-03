@@ -19,11 +19,11 @@ const FirebaseTest: React.FC<FirebaseTestProps> = ({ db }) => {
       
       // Test write
       const testData = { test: true, timestamp: new Date().toISOString() };
-      const docRef = await addDoc(collection(db, 'test'), testData);
+      await addDoc(collection(db, 'test'), testData);
       setStatus('Write test passed!');
       
       // Test read
-      const snapshot = await getDocs(collection(db, 'test'));
+      await getDocs(collection(db, 'test'));
       setStatus('Firebase is working! ✅');
       
       // Clean up test data

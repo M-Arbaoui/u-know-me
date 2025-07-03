@@ -1,204 +1,346 @@
-import React, { useState, useCallback } from 'react';
-import { addDoc, collection } from 'firebase/firestore';
-import { TrashIcon } from './icons';
+import React, { useState } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
 import Loader from './Loader';
-import CustomModal from './CustomModal';
 
 interface CreateQuizProps {
   setView: (view: string) => void;
-  setQuizId: (id: string) => void;
-  appId: string;
   db: any;
 }
 
-const CreateQuiz: React.FC<CreateQuizProps> = ({ setView, setQuizId, appId, db }) => {
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+}
+
+const CreateQuiz: React.FC<CreateQuizProps> = ({ setView, db }) => {
   const [creatorName, setCreatorName] = useState('');
-  const [questions, setQuestions] = useState([
-    { questionText: '', options: ['', '', '', ''], correctAnswer: '' }
+  const [questions, setQuestions] = useState<Question[]>([
+    { question: '', options: ['', '', '', ''], correctAnswer: '' }
   ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<{ title: string; message: string } | null>(null);
-  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const handleQuestionChange = useCallback((index: number, event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newQuestions = [...questions];
-    newQuestions[index].questionText = event.target.value;
-    setQuestions(newQuestions);
-  }, [questions]);
-
-  const handleOptionChange = useCallback((qIndex: number, oIndex: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuestions = [...questions];
-    newQuestions[qIndex].options[oIndex] = event.target.value;
-    setQuestions(newQuestions);
-  }, [questions]);
-
-  const handleCorrectAnswerChange = useCallback((qIndex: number, event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newQuestions = [...questions];
-    newQuestions[qIndex].correctAnswer = event.target.value;
-    setQuestions(newQuestions);
-  }, [questions]);
-
-  const addQuestion = useCallback(() => {
-    if (questions.length < 20) {
-      setQuestions([...questions, { questionText: '', options: ['', '', '', ''], correctAnswer: '' }]);
-    } else {
-      setError({ title: "Question Limit", message: "You can add a maximum of 20 questions." });
-    }
-  }, [questions]);
-
-  const confirmRemoveQuestion = (index: number) => {
-    setConfirmDeleteIdx(index);
+  const addQuestion = () => {
+    setQuestions([...questions, { question: '', options: ['', '', '', ''], correctAnswer: '' }]);
   };
 
-  const removeQuestion = useCallback((index: number) => {
+  const removeQuestion = (index: number) => {
     if (questions.length > 1) {
-      const newQuestions = questions.filter((_, i) => i !== index);
-      setQuestions(newQuestions);
-      setConfirmDeleteIdx(null);
-    } else {
-      setError({ title: "Hold On!", message: "A quiz needs at least one question." });
-      setConfirmDeleteIdx(null);
+      setQuestions(questions.filter((_, i) => i !== index));
     }
-  }, [questions]);
-
-  const validateQuiz = () => {
-    if (!creatorName.trim()) {
-      return "Please enter your name.";
-    }
-    for (const q of questions) {
-      if (!q.questionText.trim()) {
-        return "All question fields must be filled out.";
-      }
-      if (q.options.some(opt => !opt.trim())) {
-        return "All four options must be filled out for each question.";
-      }
-      if (!q.correctAnswer.trim()) {
-        return "Please select a correct answer for each question.";
-      }
-      if (!q.options.includes(q.correctAnswer)) {
-        return "The correct answer must be one of the four options.";
-      }
-    }
-    return null;
   };
 
-  const submitQuiz = async () => {
-    const validationError = validateQuiz();
-    if (validationError) {
-      setError({ title: "Incomplete Quiz", message: validationError });
+  const updateQuestion = (index: number, field: keyof Question, value: any) => {
+    const newQuestions = [...questions];
+    if (field === 'options') {
+      newQuestions[index].options = value;
+    } else {
+      (newQuestions[index] as any)[field] = value;
+    }
+    setQuestions(newQuestions);
+  };
+
+  const updateOption = (questionIndex: number, optionIndex: number, value: string) => {
+    const newQuestions = [...questions];
+    newQuestions[questionIndex].options[optionIndex] = value;
+    setQuestions(newQuestions);
+  };
+
+  const handleSubmit = async () => {
+    if (!creatorName.trim()) {
+      alert('Please enter your name!');
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    const validQuestions = questions.filter(q => 
+      q.question.trim() && 
+      q.options.every(opt => opt.trim()) && 
+      q.correctAnswer.trim()
+    );
+
+    if (validQuestions.length === 0) {
+      alert('Please add at least one complete question!');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const quizData = { 
-        creatorName, 
-        questions,
-        createdAt: new Date().toISOString()
+      const quizData = {
+        creatorName: creatorName.trim(),
+        questions: validQuestions,
+        createdAt: new Date().toISOString(),
       };
-      
+
       const docRef = await addDoc(collection(db, 'quizzes'), quizData);
-      setQuizId(docRef.id);
-      setView('share');
-    } catch (err) {
-      console.error("Error creating quiz:", err);
-      setError({ 
-        title: "Creation Failed", 
-        message: `Could not save your quiz. Please check your connection and try again. Error: ${err instanceof Error ? err.message : 'Unknown error'}` 
-      });
+      alert(`Quiz created successfully! Your quiz code is: ${docRef.id}`);
+      setView('creator-space');
+    } catch (error) {
+      console.error('Error creating quiz:', error);
+      alert('Error creating quiz. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return <Loader text="Saving your masterpiece..." />;
+  const getStepEmoji = (step: number) => {
+    switch (step) {
+      case 1: return '👤';
+      case 2: return '❓';
+      case 3: return '✨';
+      default: return '🎯';
+    }
+  };
+
+  const getStepTitle = (step: number) => {
+    switch (step) {
+      case 1: return 'Who are you?';
+      case 2: return 'Create your questions';
+      case 3: return 'Review & publish';
+      default: return 'Quiz creation';
+    }
+  };
+
+  if (loading) {
+    return <Loader text="Creating your masterpiece..." />;
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {error && <CustomModal title={error.title} message={error.message} onClose={() => setError(null)} />}
-      {confirmDeleteIdx !== null && (
-        <CustomModal
-          title="Delete Question?"
-          message="Are you sure you want to delete this question? This action cannot be undone."
-          onClose={() => setConfirmDeleteIdx(null)}
-        >
-          <button onClick={() => removeQuestion(confirmDeleteIdx)} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 mt-4">Delete</button>
-        </CustomModal>
-      )}
-      <button onClick={() => setView('welcome')} className="text-indigo-400 hover:text-indigo-300 mb-6" aria-label="Back to Home">&larr; Back to Home</button>
-      <h2 className="text-4xl font-bold text-white mb-2">Create Your Quiz</h2>
-      <p className="text-slate-400 mb-8">Fill in the details below. Be creative, be weird, be you.</p>
-
-      <div className="bg-slate-800/50 p-6 sm:p-8 rounded-2xl border border-slate-700 shadow-xl">
-        <div className="mb-8">
-          <label htmlFor="creatorName" className="block text-lg font-bold text-slate-200 mb-2">Your Name</label>
-          <input
-            type="text"
-            id="creatorName"
-            value={creatorName}
-            onChange={(e) => setCreatorName(e.target.value)}
-            placeholder="e.g., The Mysterious One"
-            className="w-full bg-slate-700 text-white p-4 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Creator name"
-          />
-        </div>
-
-        {questions.map((q, qIndex) => (
-          <div key={qIndex} className="bg-slate-900/70 p-6 rounded-xl mb-6 border border-slate-700 relative">
-            {questions.length > 1 && (
-              <button onClick={() => confirmRemoveQuestion(qIndex)} className="absolute -top-3 -right-3 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-all" aria-label="Delete question">
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            )}
-            <h3 className="text-xl font-bold text-indigo-300 mb-4">Question {qIndex + 1}</h3>
-            <textarea
-              value={q.questionText}
-              onChange={(e) => handleQuestionChange(qIndex, e)}
-              placeholder="What's my most toxic trait?"
-              className="w-full bg-slate-700 text-white p-3 rounded-lg border border-slate-600 mb-4 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label={`Question ${qIndex + 1}`}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {q.options.map((opt, oIndex) => (
-                <input
-                  key={oIndex}
-                  type="text"
-                  value={opt}
-                  onChange={(e) => handleOptionChange(qIndex, oIndex, e)}
-                  placeholder={`Option ${oIndex + 1}`}
-                  className="w-full bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  aria-label={`Option ${oIndex + 1} for question ${qIndex + 1}`}
-                />
-              ))}
-            </div>
-            <div className="mt-4">
-              <label className="block text-sm font-bold text-slate-300 mb-2">Which one is the correct answer?</label>
-              <select
-                value={q.correctAnswer}
-                onChange={(e) => handleCorrectAnswerChange(qIndex, e)}
-                className="w-full bg-slate-700 text-white p-3 rounded-lg border border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                aria-label={`Correct answer for question ${qIndex + 1}`}
+    <div className="min-h-screen bg-dreamy animate-fade-in">
+      <div className="container mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setView('creator-space')}
+                className="w-10 h-10 bg-lavender-100 hover:bg-lavender-200 rounded-xl flex items-center justify-center transition-all duration-200"
               >
-                <option value="" disabled>Select the correct answer</option>
-                {q.options.filter(opt => opt.trim() !== '').map((opt, i) => (
-                  <option key={i} value={opt}>{opt}</option>
-                ))}
-              </select>
+                ←
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-charcoal-800">Create Your Quiz</h1>
+                <p className="text-charcoal-600">Design the ultimate personality test</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-coral-400 rounded-2xl flex items-center justify-center shadow-neon-teal">
+              <span className="text-2xl">✨</span>
             </div>
           </div>
-        ))}
-
-        <div className="flex justify-between items-center mt-8">
-          <button onClick={addQuestion} className="bg-slate-700 text-white font-bold py-2 px-5 rounded-lg hover:bg-slate-600 transition-all" aria-label="Add question">
-            + Add Question
-          </button>
-          <button onClick={submitQuiz} className="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-all text-lg transform hover:scale-105" aria-label="Save and get code">
-            Save & Get Code
-          </button>
         </div>
+
+        {/* Progress Steps */}
+        <div className="card mb-6">
+          <div className="flex items-center justify-between mb-6">
+            {[1, 2, 3].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold transition-all duration-300 ${
+                  step <= currentStep 
+                    ? 'bg-gradient-to-br from-teal-400 to-coral-400 text-white shadow-neon-teal' 
+                    : 'bg-lavender-100 text-charcoal-400'
+                }`}>
+                  {getStepEmoji(step)}
+                </div>
+                {step < 3 && (
+                  <div className={`w-16 h-1 mx-2 rounded-full transition-all duration-300 ${
+                    step < currentStep ? 'bg-gradient-to-r from-teal-400 to-coral-400' : 'bg-lavender-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <h2 className="text-xl font-bold text-charcoal-800 text-center">
+            {getStepTitle(currentStep)}
+          </h2>
+        </div>
+
+        {/* Step 1: Creator Name */}
+        {currentStep === 1 && (
+          <div className="card animate-slide-up">
+            <div className="text-center mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-lavender-200 to-powder-200 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce-gentle">
+                <span className="text-4xl">👤</span>
+              </div>
+              <h3 className="text-xl font-bold text-charcoal-800 mb-2">What's your name?</h3>
+              <p className="text-charcoal-600">This will be displayed to your friends</p>
+            </div>
+            
+            <div className="max-w-md mx-auto">
+              <input
+                type="text"
+                value={creatorName}
+                onChange={(e) => setCreatorName(e.target.value)}
+                placeholder="Enter your name..."
+                className="input-field w-full text-center text-lg font-semibold"
+                maxLength={30}
+              />
+              <div className="text-center mt-4">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  disabled={!creatorName.trim()}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next Step →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Questions */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="card">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-charcoal-800">Your Questions</h3>
+                <button
+                  onClick={addQuestion}
+                  className="btn-secondary text-sm"
+                >
+                  + Add Question
+                </button>
+              </div>
+
+              {questions.map((question, questionIndex) => (
+                <div 
+                  key={questionIndex} 
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-lavender-200 mb-6 animate-slide-up"
+                  style={{ animationDelay: `${questionIndex * 100}ms` }}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="font-bold text-charcoal-800 text-lg">
+                      Question {questionIndex + 1}
+                    </h4>
+                    {questions.length > 1 && (
+                      <button
+                        onClick={() => removeQuestion(questionIndex)}
+                        className="text-coral-500 hover:text-coral-600 p-2 rounded-xl hover:bg-coral-50 transition-all duration-200"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+
+                  <input
+                    type="text"
+                    value={question.question}
+                    onChange={(e) => updateQuestion(questionIndex, 'question', e.target.value)}
+                    placeholder="Enter your question..."
+                    className="input-field w-full mb-4"
+                  />
+
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-charcoal-700">Options:</h5>
+                    {question.options.map((option, optionIndex) => (
+                      <div key={optionIndex} className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name={`correct-${questionIndex}`}
+                          checked={question.correctAnswer === option}
+                          onChange={() => updateQuestion(questionIndex, 'correctAnswer', option)}
+                          className="w-5 h-5 text-teal-600 bg-lavender-100 border-lavender-300 focus:ring-teal-500"
+                        />
+                        <input
+                          type="text"
+                          value={option}
+                          onChange={(e) => updateOption(questionIndex, optionIndex, e.target.value)}
+                          placeholder={`Option ${optionIndex + 1}`}
+                          className="input-field flex-1"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className="btn-secondary"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  className="btn-primary"
+                >
+                  Review Quiz →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Review */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="card">
+              <div className="text-center mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-powder-200 to-teal-200 rounded-3xl flex items-center justify-center mx-auto mb-6 animate-bounce-gentle">
+                  <span className="text-4xl">✨</span>
+                </div>
+                <h3 className="text-xl font-bold text-charcoal-800 mb-2">Review Your Quiz</h3>
+                <p className="text-charcoal-600">Make sure everything looks perfect!</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-lavender-50 to-powder-50 rounded-2xl p-6 border border-lavender-200 mb-6">
+                <h4 className="font-bold text-charcoal-800 mb-2">Creator: {creatorName}</h4>
+                <p className="text-charcoal-600">Questions: {questions.filter(q => q.question.trim()).length}</p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                {questions.filter(q => q.question.trim()).map((question, index) => (
+                  <div key={index} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-lavender-200">
+                    <h5 className="font-semibold text-charcoal-800 mb-3">
+                      Q{index + 1}: {question.question}
+                    </h5>
+                    <div className="space-y-2">
+                      {question.options.map((option, optionIndex) => (
+                        <div 
+                          key={optionIndex} 
+                          className={`flex items-center gap-3 p-3 rounded-xl ${
+                            option === question.correctAnswer 
+                              ? 'bg-teal-50 border border-teal-200' 
+                              : 'bg-lavender-50 border border-lavender-200'
+                          }`}
+                        >
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
+                            option === question.correctAnswer 
+                              ? 'bg-teal-500 text-white' 
+                              : 'bg-lavender-300 text-charcoal-600'
+                          }`}>
+                            {optionIndex + 1}
+                          </span>
+                          <span className="text-charcoal-700">{option}</span>
+                          {option === question.correctAnswer && (
+                            <span className="text-teal-600 font-bold">✓</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="btn-secondary"
+                >
+                  ← Edit Questions
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="btn-primary group"
+                >
+                  <span className="mr-2">🚀</span>
+                  Publish Quiz
+                  <span className="ml-2 group-hover:scale-110 transition-transform">✨</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

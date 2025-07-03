@@ -20,25 +20,57 @@ const ShareScreen: React.FC<ShareScreenProps> = ({ setView, quizId }) => {
   };
 
   return (
-    <div className="text-center max-w-lg mx-auto">
-      <h2 className="text-4xl font-bold text-white mb-3">Quiz Created!</h2>
-      <p className="text-slate-300 mb-8">Share this code with your friends. Let's see who dares to play.</p>
-      <div className="bg-slate-800/50 p-8 rounded-2xl border border-slate-700">
-        <p className="text-slate-400 mb-3 text-sm">Your unique Quiz Code:</p>
-        <div className="flex items-center gap-4 bg-slate-900 p-4 rounded-lg">
-          <p className="text-2xl font-mono text-indigo-300 break-all flex-1 text-left" aria-label="Quiz code">{quizId}</p>
-          <button
-            onClick={copyToClipboard}
-            className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-all"
-            aria-label="Copy quiz code"
-          >
-            {isCopied ? 'Copied!' : 'Copy'}
-          </button>
+    <div className="min-h-screen flex items-center justify-center px-4 animate-fade-in">
+      <div className="w-full max-w-2xl">
+        <div className="card text-center">
+          <div className="mb-8">
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <span className="text-2xl">✨</span>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">Quiz Created Successfully!</h2>
+            <p className="text-lg text-slate-600 mb-6">
+              Share this code with your friends to see how well they know you!
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <p className="text-sm text-slate-600 mb-2">Quiz Code</p>
+            <div className="flex items-center justify-center space-x-3">
+              <code className="text-2xl font-mono font-bold text-blue-600 bg-white px-4 py-2 rounded-lg border border-blue-200">
+                {quizId}
+              </code>
+              <button
+                onClick={copyToClipboard}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                aria-label="Copy quiz code"
+              >
+                {isCopied ? '✅ Copied!' : '📋 Copy'}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <button
+              onClick={() => setView('creator-space')}
+              className="btn-primary flex-1"
+              aria-label="View quiz results"
+            >
+              📊 View Results
+            </button>
+            <button
+              onClick={() => setView('welcome')}
+              className="btn-secondary flex-1"
+              aria-label="Create another quiz"
+            >
+              ✨ Create Another Quiz
+            </button>
+          </div>
+
+          <div className="text-sm text-slate-500">
+            <p>Your friends can join using the quiz code above</p>
+          </div>
         </div>
       </div>
-      <button onClick={() => setView('welcome')} className="mt-8 text-indigo-400 hover:text-indigo-300" aria-label="Back to Home">
-        &larr; Back to Home
-      </button>
     </div>
   );
 };

@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+// Remove analytics for now to avoid issues
+// import { getAnalytics } from "firebase/analytics";
 import Loader from './components/Loader';
-import CustomModal from './components/CustomModal';
 import WelcomeScreen from './components/WelcomeScreen';
 import CreateQuiz from './components/CreateQuiz';
-import ShareScreen from './components/ShareScreen';
 import JoinQuiz from './components/JoinQuiz';
 import QuizScreen from './components/QuizScreen';
 import ResultsScreen from './components/ResultsScreen';
-import AdminPanel from './components/AdminPanel';
+import CreatorLogin from './components/CreatorLogin';
+import CreatorSpace from './components/CreatorSpace';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,61 +24,68 @@ const firebaseConfig = {
   measurementId: "G-5QZWR6KRQ8"
 };
 
-const appId = 'u-know-me-d8a51';
-
 // Initialize Firebase with error handling
-let app, db, auth, analytics;
+let app, db, auth;
 try {
   app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   auth = getAuth(app);
-  analytics = getAnalytics(app);
+  // Remove analytics for now
+  // analytics = getAnalytics(app);
+  console.log('Firebase initialized successfully');
 } catch (error) {
   console.error("Firebase initialization failed:", error);
   app = null;
   db = null;
   auth = null;
-  analytics = null;
 }
 
 const App: React.FC = () => {
   const [view, setView] = useState('welcome');
   const [quizId, setQuizId] = useState<string | null>(null);
-  const [quizData, setQuizData] = useState<any>(null);
-  const [score, setScore] = useState(0);
+  const [participantName, setParticipantName] = useState<string>('');
+  const [quizResults, setQuizResults] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     const initialAuth = async () => {
       if (!auth) {
+        console.log('No auth available, skipping authentication');
         setIsAuthReady(true);
         return;
       }
       
-      onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          const attemptSignIn = async () => {
-            try {
-              await signInAnonymously(auth);
-            } catch (error) {
-              console.error("Authentication failed:", error);
-            } finally {
-              setIsAuthReady(true);
-            }
-          };
-          attemptSignIn();
-        } else {
-          setIsAuthReady(true);
-        }
-      });
+      try {
+        onAuthStateChanged(auth, (user) => {
+          if (!user) {
+            const attemptSignIn = async () => {
+              try {
+                await signInAnonymously(auth);
+                console.log('Anonymous sign-in successful');
+              } catch (error) {
+                console.error("Authentication failed:", error);
+              } finally {
+                setIsAuthReady(true);
+              }
+            };
+            attemptSignIn();
+          } else {
+            console.log('User already signed in');
+            setIsAuthReady(true);
+          }
+        });
+      } catch (error) {
+        console.error('Auth state change error:', error);
+        setIsAuthReady(true);
+      }
     };
     initialAuth();
   }, []);
 
   const resetState = () => {
     setQuizId(null);
-    setQuizData(null);
-    setScore(0);
+    setParticipantName('');
+    setQuizResults(null);
   };
 
   const handleSetView = (newView: string) => {
@@ -94,17 +101,20 @@ const App: React.FC = () => {
     }
     switch (view) {
       case 'create':
-        return <CreateQuiz setView={handleSetView} setQuizId={setQuizId} appId={appId} db={db} />;
-      case 'share':
-        return <ShareScreen setView={handleSetView} quizId={quizId} />;
+        return <CreateQuiz setView={handleSetView} db={db} />;
       case 'join':
-        return <JoinQuiz setView={handleSetView} setQuizId={setQuizId} setQuizData={setQuizData} appId={appId} db={db} />;
+        return <JoinQuiz setView={handleSetView} setQuizId={setQuizId} setParticipantName={setParticipantName} db={db} />;
       case 'quiz':
-        return quizData ? <QuizScreen setView={handleSetView} quizData={quizData} setScore={setScore} /> : <Loader text="Loading quiz..." />;
+        return quizId && participantName ? <QuizScreen setView={handleSetView} quizId={quizId} participantName={participantName} setQuizResults={setQuizResults} db={db} /> : <Loader text="Loading quiz..." />;
       case 'results':
-        return quizData && quizId ? <ResultsScreen setView={handleSetView} score={score} quizData={quizData} quizId={quizId} db={db} /> : <Loader />;
+        return quizResults ? <ResultsScreen setView={handleSetView} results={quizResults} /> : <Loader />;
+      case 'creator-login':
+        return <CreatorLogin setView={handleSetView} />;
+      case 'creator-space':
+        return <CreatorSpace setView={handleSetView} db={db} devMode={false} />;
       case 'admin':
-        return <AdminPanel setView={handleSetView} db={db} appId={appId} />;
+      case 'developer':
+        return <CreatorSpace setView={handleSetView} db={db} devMode={true} />;
       case 'welcome':
       default:
         return <WelcomeScreen setView={handleSetView} />;
@@ -112,12 +122,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <main className="bg-slate-900 text-white min-h-screen w-full font-sans flex items-center justify-center p-4">
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
-      <div className="z-10 w-full">
-        {renderView()}
-      </div>
-    </main>
+    <div className="min-h-screen w-full">
+      {renderView()}
+    </div>
   );
 };
 
