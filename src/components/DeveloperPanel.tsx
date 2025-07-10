@@ -84,12 +84,17 @@ export default function DeveloperPanel({ db, currentUser }: DeveloperPanelProps)
     setLoadingQuizzes(true);
     try {
       const quizzesRef = collection(db, 'quizzes');
-      const q = query(quizzesRef, orderBy('createdAt', 'desc'));
+      const q = query(quizzesRef);
+      // orderBy('createdAt', 'desc') // Temporarily removed
       const snapshot = await getDocs(q);
       const quizzes = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      } as any));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      quizzes.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       setFirestoreQuizzes(quizzes);
     } catch (error) {
       console.error('Error fetching Firestore quizzes:', error);

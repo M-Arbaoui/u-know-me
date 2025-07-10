@@ -86,12 +86,17 @@ const CreatorSpace: React.FC<CreatorSpaceProps> = ({ setView, db, devMode = fals
     setLoading(true);
     try {
       const quizzesRef = collection(db, 'quizzes');
-      const q = query(quizzesRef, orderBy('createdAt', 'desc'));
+      const q = query(quizzesRef);
+      // orderBy('createdAt', 'desc') // Temporarily removed
       const snapshot = await getDocs(q);
       const quizzesList: QuizData[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as QuizData));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      quizzesList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       setQuizzes(quizzesList);
     } catch (error) {
       console.error('Error fetching all quizzes:', error);
@@ -163,15 +168,21 @@ const CreatorSpace: React.FC<CreatorSpaceProps> = ({ setView, db, devMode = fals
       const resultsRef = collection(db, 'quizAttempts');
       let q;
       if (devMode) {
-        q = query(resultsRef, orderBy('createdAt', 'desc'));
+        q = query(resultsRef);
+        // orderBy('createdAt', 'desc') // Temporarily removed
       } else {
-        q = query(resultsRef, where('quizId', '==', quizId), orderBy('createdAt', 'desc'));
+        q = query(resultsRef, where('quizId', '==', quizId));
+        // orderBy('createdAt', 'desc') // Temporarily removed
       }
       const snapshot = await getDocs(q);
       let resultsList: QuizResult[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as QuizResult));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      resultsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       if (devMode && quizId) {
         resultsList = resultsList.filter(r => r.quizId === quizId);
       }

@@ -37,14 +37,18 @@ const CreatorDashboard: React.FC<CreatorDashboardProps> = ({ setView, db, quizId
       const resultsRef = collection(db, 'quizAttempts');
       const q = query(
         resultsRef, 
-        where('quizId', '==', quizId),
-        orderBy('createdAt', 'desc')
+        where('quizId', '==', quizId)
+        // orderBy('createdAt', 'desc') // Temporarily removed
       );
       const snapshot = await getDocs(q);
       const resultsList: QuizResult[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as QuizResult));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      resultsList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       setResults(resultsList);
     } catch (err) {
       setError('Failed to load results. Please try again.');

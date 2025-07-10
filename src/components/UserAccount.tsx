@@ -44,14 +44,18 @@ export default function UserAccount({ db, currentUser, setView }: UserAccountPro
       const quizzesRef = collection(db, 'quizzes');
       const q = query(
         quizzesRef, 
-        where('creatorId', '==', currentUser.uid),
-        orderBy('createdAt', 'desc')
+        where('creatorId', '==', currentUser.uid)
+        // orderBy('createdAt', 'desc') // Temporarily removed
       );
       const snapshot = await getDocs(q);
       const quizzes = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as QuizData));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      quizzes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
       setUserQuizzes(quizzes);
     } catch (error) {
       console.error('Error fetching user quizzes:', error);
