@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import Loader from './Loader';
+import TelegramService from '../services/telegramService';
 
 interface JoinQuizProps {
   setView: (view: string) => void;
@@ -40,6 +41,16 @@ const JoinQuiz: React.FC<JoinQuizProps> = ({
       const snapshot = await getDocs(q);
 
       if (!snapshot.empty) {
+        const quizData = snapshot.docs[0].data();
+        
+        // Send Telegram notification
+        const telegramService = TelegramService.getInstance();
+        await telegramService.notifyQuizJoined({
+          participantName: participantName.trim(),
+          quizId: quizCode.trim(),
+          quizTitle: quizData.creatorName ? `Quiz by ${quizData.creatorName}` : 'Untitled Quiz',
+        });
+        
         setQuizId(quizCode.trim());
         setParticipantName(participantName.trim());
         setView('quiz');

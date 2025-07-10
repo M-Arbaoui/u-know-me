@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import CopyButton from './CopyButton';
 
 interface ShareScreenProps {
   setView: (view: string) => void;
@@ -6,19 +7,6 @@ interface ShareScreenProps {
 }
 
 const ShareScreen: React.FC<ShareScreenProps> = ({ setView, quizId }) => {
-  const [isCopied, setIsCopied] = useState(false);
-
-  const copyToClipboard = async () => {
-    if (!quizId) return;
-    try {
-      await navigator.clipboard.writeText(quizId);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 animate-fade-in">
       <div className="w-full max-w-2xl">
@@ -39,13 +27,13 @@ const ShareScreen: React.FC<ShareScreenProps> = ({ setView, quizId }) => {
               <code className="text-2xl font-mono font-bold text-blue-600 bg-white px-4 py-2 rounded-lg border border-blue-200">
                 {quizId}
               </code>
-              <button
-                onClick={copyToClipboard}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                aria-label="Copy quiz code"
-              >
-                {isCopied ? '✅ Copied!' : '📋 Copy'}
-              </button>
+              <CopyButton
+                textToCopy={quizId || ''}
+                label="Copy Code"
+                variant="primary"
+                size="md"
+                className="shadow-lg"
+              />
             </div>
           </div>
 

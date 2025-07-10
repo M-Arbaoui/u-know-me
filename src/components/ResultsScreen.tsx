@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CopyButton from './CopyButton';
 
 interface ResultsScreenProps {
   results: {
@@ -216,22 +217,32 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ results, setView }) => {
               Challenge your friends to beat your score!
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              <CopyButton
+                textToCopy={`🎯 ${results.participantName} got ${results.percentage}% (${results.score}/${results.totalQuestions} correct) on a personality quiz! Think you can do better? Challenge me! 🚀`}
+                label="Copy Results"
+                variant="accent"
+                size="lg"
+                className="flex-1"
+              />
+              
               <button
                 onClick={() => {
                   const text = `I got ${results.percentage}% on a personality quiz! Think you can do better? 🎯`;
                   navigator.share ? navigator.share({ text }) : navigator.clipboard.writeText(text);
                 }}
-                className="btn-accent group"
+                className="btn-accent group flex-1"
               >
                 <span className="mr-2">📱</span>
                 Share Results
                 <span className="ml-2 group-hover:scale-110 transition-transform">🚀</span>
               </button>
-              
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => setView('welcome')}
-                className="btn-secondary group"
+                className="btn-secondary group flex-1"
               >
                 <span className="mr-2">🎯</span>
                 Create Your Own

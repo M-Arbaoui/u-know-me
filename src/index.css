@@ -87,6 +87,10 @@
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
   }
 
+  .shadow-neon-glow-teal {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.4), 0 0 40px rgba(20, 184, 166, 0.2);
+  }
+
   /* Gradients */
   .gradient-primary {
     background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);

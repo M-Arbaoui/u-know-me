@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 import Loader from './Loader';
+import TelegramService from '../services/telegramService';
 
 interface QuizScreenProps {
   quizId: string;
@@ -116,6 +117,18 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
       };
 
       await addDoc(collection(db, 'quizAttempts'), results);
+      
+      // Send Telegram notification
+      const telegramService = TelegramService.getInstance();
+      await telegramService.notifyQuizCompleted({
+        participantName,
+        quizId,
+        quizTitle: `Quiz by ${quiz.creatorName}`,
+        score,
+        totalQuestions: quiz.questions.length,
+        percentage,
+      });
+      
       setQuizResults(results);
       setView('results');
     } catch (error) {

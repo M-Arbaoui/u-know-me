@@ -12,6 +12,7 @@ import QuizScreen from './components/QuizScreen';
 import ResultsScreen from './components/ResultsScreen';
 import CreatorLogin from './components/CreatorLogin';
 import CreatorSpace from './components/CreatorSpace';
+import DeveloperPanel from './components/DeveloperPanel';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -46,6 +47,8 @@ const App: React.FC = () => {
   const [participantName, setParticipantName] = useState<string>('');
   const [quizResults, setQuizResults] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [showDev, setShowDev] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     const initialAuth = async () => {
@@ -57,6 +60,7 @@ const App: React.FC = () => {
       
       try {
         onAuthStateChanged(auth, (user) => {
+          setCurrentUser(user);
           if (!user) {
             const attemptSignIn = async () => {
               try {
@@ -82,6 +86,21 @@ const App: React.FC = () => {
     initialAuth();
   }, []);
 
+  useEffect(() => {
+    // Keyboard shortcut: Ctrl+Shift+D or Cmd+Shift+D for dev panel
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        setShowDev(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    // Secret route: /dev
+    if (window.location.pathname === '/dev') {
+      setShowDev(true);
+    }
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const resetState = () => {
     setQuizId(null);
     setParticipantName('');
@@ -98,6 +117,9 @@ const App: React.FC = () => {
   const renderView = () => {
     if (!isAuthReady) {
       return <Loader text="Connecting to servers..." />;
+    }
+    if (showDev) {
+      return <DeveloperPanel db={db} currentUser={currentUser} />;
     }
     switch (view) {
       case 'create':
