@@ -103,25 +103,54 @@ const CreatorSpace: React.FC<CreatorSpaceProps> = ({ setView, db, devMode = fals
   const fetchQuizzes = async (creatorName: string) => {
     setLoading(true);
     try {
-      console.log('CreatorSpace: Fetching quizzes for creator:', creatorName);
+      console.log('CreatorSpace: Starting to fetch quizzes for creator:', creatorName);
+      console.log('CreatorSpace: Firebase db object:', db);
+      
+      if (!db) {
+        console.error('CreatorSpace: No Firebase db object available!');
+        return;
+      }
+      
       const quizzesRef = collection(db, 'quizzes');
+      console.log('CreatorSpace: Created collection reference:', quizzesRef);
+      
+      // Temporary fix: Remove orderBy to avoid index requirement
       const q = query(
         quizzesRef, 
-        where('creatorName', '==', creatorName),
-        orderBy('createdAt', 'desc')
+        where('creatorName', '==', creatorName)
+        // orderBy('createdAt', 'desc') // Temporarily removed until index is built
       );
-      console.log('CreatorSpace: Query created:', q);
+      console.log('CreatorSpace: Created query:', q);
+      
+      console.log('CreatorSpace: Executing query...');
       const snapshot = await getDocs(q);
-      console.log('CreatorSpace: Snapshot size:', snapshot.size);
+      console.log('CreatorSpace: Query completed. Snapshot size:', snapshot.size);
+      console.log('CreatorSpace: Snapshot empty:', snapshot.empty);
+      
       const quizzesList: QuizData[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as QuizData));
-      console.log('CreatorSpace: Found quizzes:', quizzesList);
-      console.log('CreatorSpace: Quiz details:', quizzesList.map(q => ({ id: q.id, creatorName: q.creatorName, title: q.title })));
+      
+      // Sort manually in JavaScript instead of using orderBy
+      quizzesList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      console.log('CreatorSpace: Processed quizzes:', quizzesList);
+      console.log('CreatorSpace: Quiz details:', quizzesList.map(q => ({ 
+        id: q.id, 
+        creatorName: q.creatorName, 
+        title: q.title,
+        questionsCount: q.questions?.length || 0
+      })));
+      
       setQuizzes(quizzesList);
     } catch (error) {
       console.error('CreatorSpace: Error fetching quizzes:', error);
+      console.error('CreatorSpace: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: (error as any)?.code || 'No code',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
     } finally {
       setLoading(false);
     }
