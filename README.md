@@ -45,7 +45,7 @@ A modern, interactive personality quiz application built with React, Vite, Tailw
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS
 - **Backend:** Firebase (Firestore + Auth)
-- **Deployment:** Firebase Hosting
+- **Deployment:** Firebase Hosting / Vercel
 - **Notifications:** Telegram Bot API
 
 ## 📦 Installation
@@ -144,7 +144,41 @@ Update `src/firebase/config.ts` with your Firebase project settings.
 
 ## 🚀 Deployment
 
-### Firebase Hosting
+### Option 1: Vercel (Recommended)
+
+1. **Install Vercel CLI**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Login to Vercel**
+   ```bash
+   vercel login
+   ```
+
+3. **Deploy to Vercel**
+   ```bash
+   vercel
+   ```
+
+4. **Set Environment Variables**
+   - Go to your Vercel dashboard
+   - Navigate to your project settings
+   - Add your Firebase environment variables:
+     - `VITE_FIREBASE_API_KEY`
+     - `VITE_FIREBASE_AUTH_DOMAIN`
+     - `VITE_FIREBASE_PROJECT_ID`
+     - `VITE_FIREBASE_STORAGE_BUCKET`
+     - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+     - `VITE_FIREBASE_APP_ID`
+
+5. **Redeploy with Environment Variables**
+   ```bash
+   vercel --prod
+   ```
+
+### Option 2: Firebase Hosting
+
 1. **Install Firebase CLI**
    ```bash
    npm install -g firebase-tools
