@@ -16,12 +16,12 @@ import DeveloperPanel from './components/DeveloperPanel';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCMjQPxbbndf6ZpvSH7IO9XyLDsOjUai4M",
-  authDomain: "u-know-me-d8a51.firebaseapp.com",
-  projectId: "u-know-me-d8a51",
-  storageBucket: "u-know-me-d8a51.firebasestorage.app",
-  messagingSenderId: "599384550747",
-  appId: "1:599384550747:web:afd4d9eecc60d18a773e7e",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCMjQPxbbndf6ZpvSH7IO9XyLDsOjUai4M",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "u-know-me-d8a51.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "u-know-me-d8a51",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "u-know-me-d8a51.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "599384550747",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:599384550747:web:afd4d9eecc60d18a773e7e",
   measurementId: "G-5QZWR6KRQ8"
 };
 

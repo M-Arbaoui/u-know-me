@@ -99,3 +99,4 @@ ui-debug.log
 
 # Local development
 *.local
+.vercel
