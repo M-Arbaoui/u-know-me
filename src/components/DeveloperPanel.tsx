@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, deleteDoc, doc } from 'firebase/firestore';
 import CopyButton from './CopyButton';
 
 const DEV_PASSWORD = 'dev2024!';

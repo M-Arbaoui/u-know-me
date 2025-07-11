@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, where, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import CopyButton from './CopyButton';
 
 interface UserAccountProps {
