@@ -162,7 +162,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ setView }) => {
         {/* Footer */}
         <div className="text-center mt-12">
           <p className="text-charcoal-500 text-sm">
-            Made with ❤️ and a touch of chaos
+            MADE BY v3lix.io
           </p>
         </div>
       </div>
