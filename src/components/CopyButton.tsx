@@ -1,90 +1,53 @@
 import React, { useState } from 'react';
+import { TbCopy, TbCheck } from 'react-icons/tb';
 
 interface CopyButtonProps {
   textToCopy: string;
   label?: string;
-  className?: string;
+  variant?: 'primary' | 'accent' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
-  variant?: 'primary' | 'secondary' | 'accent' | 'ghost';
-  showIcon?: boolean;
-  onCopy?: () => void;
+  className?: string;
 }
+
+const sizeClasses = {
+  sm: 'px-3 py-2 text-sm',
+  md: 'px-4 py-2 text-base',
+  lg: 'px-6 py-3 text-lg',
+};
+const variantClasses = {
+  primary: 'bg-gradient-to-r from-[#A2D2FF] to-[#3BB3FF] text-white border-2 border-[#3BB3FF] hover:from-[#3BB3FF]/80 hover:to-[#A2D2FF]/80',
+  accent: 'bg-[#A2D2FF] text-[#232946] border-2 border-[#3BB3FF] hover:bg-[#3BB3FF]/80',
+  ghost: 'bg-white text-[#3BB3FF] border-2 border-[#A2D2FF] hover:bg-[#A2D2FF]/20',
+};
 
 const CopyButton: React.FC<CopyButtonProps> = ({
   textToCopy,
   label = 'Copy',
-  className = '',
-  size = 'md',
   variant = 'primary',
-  showIcon = true,
-  onCopy
+  size = 'md',
+  className = '',
 }) => {
-  const [isCopied, setIsCopied] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = async () => {
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(textToCopy);
-      setIsCopied(true);
-      onCopy?.();
-      
-      // Reset after 2 seconds
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = textToCopy;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch (e) {
+      setCopied(false);
     }
-  };
-
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
-  };
-
-  const variantClasses = {
-    primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl',
-    secondary: 'bg-gradient-to-r from-slate-600 to-gray-600 hover:from-slate-700 hover:to-gray-700 text-white shadow-lg hover:shadow-xl',
-    accent: 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl',
-    ghost: 'bg-white/10 backdrop-blur-sm border border-white/20 hover:bg-white/20 text-white'
-  };
-
-  const iconClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6'
   };
 
   return (
     <button
-      onClick={copyToClipboard}
-      className={`
-        ${sizeClasses[size]}
-        ${variantClasses[variant]}
-        ${className}
-        rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95
-        flex items-center justify-center gap-2
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-        disabled:opacity-50 disabled:cursor-not-allowed
-      `}
-      disabled={isCopied}
-      aria-label={`Copy ${label}`}
+      type="button"
+      aria-label={label}
+      onClick={handleCopy}
+      className={`flex items-center gap-2 rounded-xl font-bold shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#A2D2FF] ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
     >
-      {showIcon && (
-        <span className={`${iconClasses[size]} transition-transform duration-300 ${isCopied ? 'rotate-12' : ''}`}>
-          {isCopied ? '✅' : '📋'}
-        </span>
-      )}
-      <span className="transition-all duration-300">
-        {isCopied ? 'Copied!' : label}
-      </span>
+      {copied ? <TbCheck className="text-emerald-500" /> : <TbCopy />}
+      <span>{copied ? 'Copied!' : label}</span>
     </button>
   );
 };

@@ -18,6 +18,7 @@ export const TELEGRAM_CONFIG = {
     QUIZ_JOINED: true,
     QUIZ_COMPLETED: true,
     NEW_ACCOUNT: true,
+    USER_LOGIN: true,
   }
 };
 
