@@ -10,7 +10,6 @@ interface QuizScreenProps {
   quizId: string;
   participantName: string;
   setView: (view: string) => void;
-  setQuizResults: (results: any) => void;
   db: any;
 }
 
@@ -31,7 +30,6 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   quizId, 
   participantName, 
   setView, 
-  setQuizResults, 
   db 
 }) => {
   const [quiz, setQuiz] = useState<QuizData | null>(null);
@@ -40,7 +38,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
-  const [showTimer, setShowTimer] = useState(false);
+  const showTimer = false; // removed unused setShowTimer
 
   useEffect(() => {
     fetchQuiz();
@@ -109,7 +107,6 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
       };
 
       await addDoc(collection(db, 'quizAttempts'), results);
-      setQuizResults(results);
       setView('results');
     } catch (error) {
       console.error('Error submitting results:', error);

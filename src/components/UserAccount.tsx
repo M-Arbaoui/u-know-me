@@ -274,7 +274,6 @@ export default function UserAccount({ db, currentUser, setView }: UserAccountPro
                                   label=""
                                   variant="ghost"
                                   size="sm"
-                                  showIcon={true}
                                   className="bg-black/60 hover:bg-black/80"
                                 />
                               </div>

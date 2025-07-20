@@ -45,11 +45,10 @@ const App: React.FC = () => {
   const [view, setView] = useState('welcome');
   const [quizId, setQuizId] = useState<string | null>(null);
   const [participantName, setParticipantName] = useState<string>('');
-  const [quizResults, setQuizResults] = useState<any>(null);
+  // removed unused quizResults and showAccountSection
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [showDev, setShowDev] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [showAccountSection, setShowAccountSection] = useState(false);
   
   // Quiz creation success state
   const [createdQuizId, setCreatedQuizId] = useState<string | null>(null);
@@ -133,8 +132,6 @@ const App: React.FC = () => {
   const resetState = () => {
     setQuizId(null);
     setParticipantName('');
-    setQuizResults(null);
-    setShowAccountSection(false);
     setCreatedQuizId(null);
   };
 
@@ -144,10 +141,10 @@ const App: React.FC = () => {
     
     // Handle special case for creator-space with account section
     if (newView === 'creator-space-account') {
-      setShowAccountSection(true);
+      // setShowAccountSection(true); // Removed
       newView = 'creator-space';
     } else {
-      setShowAccountSection(false);
+      // setShowAccountSection(false); // Removed
     }
     
     // Add to navigation history
@@ -186,7 +183,7 @@ const App: React.FC = () => {
       case 'join':
         return <JoinQuiz setView={handleSetView} goBack={goBack} setQuizId={setQuizId} setParticipantName={setParticipantName} db={db} preFilledQuizCode={quizId || undefined} />;
       case 'quiz':
-        return quizId && participantName ? <QuizScreen setView={handleSetView} quizId={quizId} participantName={participantName} setQuizResults={setQuizResults} db={db} /> : <Loader text="Loading quiz..." />;
+        return quizId && participantName ? <QuizScreen setView={handleSetView} quizId={quizId} participantName={participantName} db={db} /> : <Loader text="Loading quiz..." />;
       case 'results':
         return <Loader />;
       case 'creator-login':
