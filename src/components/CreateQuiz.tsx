@@ -826,24 +826,6 @@ const CreateQuiz: React.FC<CreateQuizProps> = ({ setView, goBack, db, setCreated
                   />
                 </div>
               </div>
-                  {/* Shareable Link Section */}
-                  <div className="bg-[#A2D2FF]/30 rounded-2xl p-6 border-2 border-[#3BB3FF]">
-                    <h4 className="font-bold text-[#232946] mb-4 text-center">Shareable Link</h4>
-                    <div className="bg-white rounded-xl p-4 border-2 border-[#3BB3FF] mb-4">
-                      <code className="text-lg font-mono text-[#3BB3FF] break-all">
-                        {`${window.location.origin}?join=${createdQuizId}`}
-                      </code>
-                    </div>
-                    <div className="flex justify-center">
-                      <CopyButton
-                        textToCopy={`${window.location.origin}?join=${createdQuizId}`}
-                        label="Copy Share Link"
-                        variant="accent"
-                        size="lg"
-                        className="text-lg bg-[#A2D2FF] text-[#232946] hover:bg-[#3BB3FF]/80"
-                      />
-                    </div>
-                  </div>
                   {/* Next Steps Info */}
                   <div className="bg-[#CFFFE5]/40 rounded-xl p-6 border-2 border-[#3BB3FF]">
                     <h5 className="font-bold text-[#3BB3FF] mb-3 text-center">What's next?</h5>
