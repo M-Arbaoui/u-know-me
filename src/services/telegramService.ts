@@ -20,6 +20,7 @@ interface NotificationData {
   timestamp?: string;
   userAgent?: string;
   platform?: string;
+  totalQuizzes?: number;
 }
 
 class TelegramService {
@@ -73,6 +74,9 @@ class TelegramService {
         message += `📝 *Quiz Title:* ${data.quizTitle || 'Untitled'}\n`;
         message += `🆔 *Quiz ID:* \`${data.quizId}\`\n`;
         message += `📊 *Questions:* ${data.totalQuestions || 0}\n`;
+        if (data.totalQuizzes !== undefined) {
+          message += `📈 *Total Quizzes:* ${data.totalQuizzes}\n`;
+        }
         break;
 
       case 'quiz_joined':
@@ -157,6 +161,7 @@ class TelegramService {
     quizId: string;
     quizTitle?: string;
     totalQuestions: number;
+    totalQuizzes?: number;
   }): Promise<boolean> {
     return this.sendNotification({
       ...data,

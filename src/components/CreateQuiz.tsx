@@ -296,12 +296,14 @@ const CreateQuiz: React.FC<CreateQuizProps> = ({ setView, goBack, db, setCreated
       console.log('CreateQuiz: Quiz saved with document ID:', docRef.id);
       
       // Send Telegram notification
-      const telegramService = TelegramService.getInstance();
-      await telegramService.notifyQuizCreated({
+      const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
+      const totalQuizzes = quizzesSnapshot.size;
+      await TelegramService.getInstance().notifyQuizCreated({
         userName: creatorName.trim(),
         quizId: shortCode, // Use short code instead of doc ID
         quizTitle: `Quiz by ${creatorName.trim()}`,
         totalQuestions: validQuestions.length,
+        totalQuizzes: totalQuizzes as number, // Add this property to match the updated type
       });
       
       // Save creator name to localStorage so Creator Space can find the quizzes

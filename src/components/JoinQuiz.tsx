@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaArrowLeft, FaPaste } from 'react-icons/fa';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 interface JoinQuizProps {
   setView: (view: string) => void;
@@ -28,14 +29,14 @@ const JoinQuiz: React.FC<JoinQuizProps> = ({ setView, goBack, setQuizId, setPart
     setLoading(true);
     setError('');
     try {
-      const quizzesRef = db.collection('quizzes');
-      const q = quizzesRef.where('shortCode', '==', quizCode.trim());
-      const snapshot = await q.get();
+      const quizzesRef = collection(db, 'quizzes');
+      const q = query(quizzesRef, where('shortCode', '==', quizCode.trim()));
+      const snapshot = await getDocs(q);
       if (snapshot.empty) {
         setError('Quiz not found. Please check the code and try again.');
         return;
       }
-      setQuizId(quizCode.trim());
+      setQuizId(snapshot.docs[0].id); // Pass Firestore doc ID, not shortCode
       setParticipantName(participantName.trim());
       setView('quiz');
     } catch (error) {
@@ -210,4 +211,4 @@ const JoinQuiz: React.FC<JoinQuizProps> = ({ setView, goBack, setQuizId, setPart
   );
 };
 
-export default JoinQuiz; 
+export default JoinQuiz;

